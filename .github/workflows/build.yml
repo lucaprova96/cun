@@ -11,6 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      APP_LAYOUT: ${{ vars.APP_LAYOUT }}
+      TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+      SUBDL_API_KEY: ${{ secrets.SUBDL_API_KEY }}
+      RABBITSTREAM_SOURCE_API: ${{ secrets.RABBITSTREAM_SOURCE_API }}
+
     steps:
     - uses: actions/checkout@v4
 
