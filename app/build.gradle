@@ -7,44 +7,54 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
-android {
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-        coreLibraryDesugaringEnabled true
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+
+if (localPropertiesFile.exists() && localPropertiesFile.isFile()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
     }
 }
 
-dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+def resolveConfigValue = { String key, String fallback ->
+    def gradleValue = findProperty(key)
+    def envValue = System.getenv(key)
+    def localValue = localProperties.getProperty(key)
+    def value = gradleValue ?: envValue ?: localValue ?: fallback
+    return value.toString().trim()
 }
+
+def toBuildConfigString = { String value ->
+    return "\"${value.replace('\\', '\\\\').replace('"', '\\"')}\""
+}
+
+def appLayout = resolveConfigValue('APP_LAYOUT', 'auto').toLowerCase(Locale.ROOT)
+def tmdbApiKey = resolveConfigValue('TMDB_API_KEY', '')
+def subdlApiKey = resolveConfigValue('SUBDL_API_KEY', '')
+def rabbitstreamSourceApi = resolveConfigValue('RABBITSTREAM_SOURCE_API', '')
 
 android {
     namespace 'com.luce'
     compileSdk 36
 
-    def properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
     defaultConfig {
-        applicationId "com.luce"
+        applicationId 'com.luce'
         minSdk 21
         targetSdk 35
         versionCode 154
-        versionName "1.7.225"
+        versionName '1.7.225'
 
-        buildConfigField "String", "APP_LAYOUT", "\"${properties.getProperty("APP_LAYOUT")}\""
-        buildConfigField "String", "TMDB_API_KEY", "\"${properties.getProperty("TMDB_API_KEY")}\""
-        buildConfigField "String", "SUBDL_API_KEY", "\"${properties.getProperty("SUBDL_API_KEY")}\""
-        buildConfigField "String", "RABBITSTREAM_SOURCE_API", "\"${properties.getProperty("RABBITSTREAM_SOURCE_API")}\""
+        buildConfigField 'String', 'APP_LAYOUT', toBuildConfigString(appLayout)
+        buildConfigField 'String', 'TMDB_API_KEY', toBuildConfigString(tmdbApiKey)
+        buildConfigField 'String', 'SUBDL_API_KEY', toBuildConfigString(subdlApiKey)
+        buildConfigField 'String', 'RABBITSTREAM_SOURCE_API', toBuildConfigString(rabbitstreamSourceApi)
     }
 
     sourceSets {
         main {
-            def appLayout = properties.getProperty("APP_LAYOUT")
-            if (appLayout == "mobile") {
+            if (appLayout == 'mobile') {
                 manifest.srcFile "${project.rootDir}/app/src/main/mobile/AndroidManifest.xml"
-            } else if (appLayout == "tv") {
+            } else if (appLayout == 'tv') {
                 manifest.srcFile "${project.rootDir}/app/src/main/tv/AndroidManifest.xml"
             } else {
                 manifest.srcFile "${project.rootDir}/app/src/main/AndroidManifest.xml"
@@ -55,7 +65,9 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
+
     kotlinOptions {
         jvmTarget = '17'
     }
@@ -79,6 +91,8 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
     implementation 'androidx.media3:media3-datasource-okhttp:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
@@ -117,21 +131,20 @@ dependencies {
 
     implementation 'androidx.tvprovider:tvprovider:1.1.0'
 
-    implementation "androidx.room:room-runtime:2.7.0-rc01"
-    implementation "androidx.room:room-ktx:2.7.0-rc01"
+    implementation 'androidx.room:room-runtime:2.7.0-rc01'
+    implementation 'androidx.room:room-ktx:2.7.0-rc01'
     implementation 'com.google.android.material:material:1.12.0'
     ksp 'androidx.room:room-compiler:2.7.0-rc01'
 
-    implementation("org.mozilla:rhino:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation 'org.mozilla:rhino:1.8.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0'
     implementation 'org.conscrypt:conscrypt-android:2.5.2'
-    implementation "androidx.browser:browser:1.7.0"
-    implementation "org.nanohttpd:nanohttpd:2.3.1"
-    implementation "com.google.zxing:core:3.5.1"
-    implementation("org.java-websocket:Java-WebSocket:1.5.3")
-    
+    implementation 'androidx.browser:browser:1.7.0'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'com.google.zxing:core:3.5.1'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
 }
 
 ksp {
-    arg("com.bumptech.glide.GlideModule", "AppGlideModule")
+    arg('com.bumptech.glide.GlideModule', 'AppGlideModule')
 }
